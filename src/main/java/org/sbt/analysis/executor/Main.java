@@ -27,13 +27,15 @@ public class Main {
         //320 - positive
         //200 - negative
         List<Patient> patients = csvController.getPatientsFromCsv(dataFile);
+        Collections.shuffle(patients);
+        //doing analysis
         List<Patient> patientsForTraining = new ArrayList<>();
         List<Patient> patientsForTest = new ArrayList<>();
         int counterPositiveCase = 0;
         int counterNegativeCase = 0;
-        int maxPositiveCaseInTraining = 240;
+        int maxPositiveCaseInTraining = (int) (totalPositiveCase * 0.75);
         int maxPositiveCaseInTest = totalPositiveCase - maxPositiveCaseInTraining;
-        int maxNegativeCaseInTraining = 150;
+        int maxNegativeCaseInTraining = (int) (totalNegativeCase * 0.75);
         int maxNegativeCaseInTest = totalNegativeCase - maxNegativeCaseInTraining;
         for (Patient patient : patients) {
             if (patient.classification) {
@@ -100,10 +102,10 @@ public class Main {
             }
         }
 
-        System.out.println("TP: " + TP + "/" + maxPositiveCaseInTest);
-        System.out.println("TN: " + TN + "/" + maxNegativeCaseInTest);
-        System.out.println("FP: " + FP + "/" + maxPositiveCaseInTest);
-        System.out.println("FN: " + FN + "/" + maxNegativeCaseInTest);
+        System.out.println("TP: " + TP + "/" + maxPositiveCaseInTest + "=" + TP / (float) maxPositiveCaseInTest);
+        System.out.println("TN: " + TN + "/" + maxNegativeCaseInTest + "=" + TN / (float) maxNegativeCaseInTest);
+        System.out.println("FP: " + FP + "/" + maxPositiveCaseInTest + "=" + FP / (float) maxPositiveCaseInTest);
+        System.out.println("FN: " + FN + "/" + maxNegativeCaseInTest + "=" + FN / (float) maxNegativeCaseInTest);
         System.out.println("undef: " + undef);
     }
 }
