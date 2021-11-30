@@ -1,5 +1,8 @@
 package org.sbt.analysis.entity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Patient {
     public final Integer age;
     public final Boolean isMan;
@@ -53,6 +56,34 @@ public class Patient {
         this.alopecia = alopecia;
         this.obesity = obesity;
         this.classification = classification;
+    }
+
+    public List<Integer> signsToList() {
+        List<Integer> signs = new ArrayList<>();
+        signs.add(getIntClass(isMan));
+        signs.add(getIntClass(polyuria));
+        signs.add(getIntClass(polydipsia));
+        signs.add(getIntClass(suddenWeightLoss));
+        signs.add(getIntClass(weakness));
+        signs.add(getIntClass(polyphagia));
+        signs.add(getIntClass(genitalThrush));
+        signs.add(getIntClass(visualBlurring));
+        signs.add(getIntClass(itching));
+        signs.add(getIntClass(irritability));
+        signs.add(getIntClass(delayedHealing));
+        signs.add(getIntClass(partialParesis));
+        signs.add(getIntClass(muscleStiffness));
+        signs.add(getIntClass(alopecia));
+        signs.add(getIntClass(obesity));
+        return signs;
+    }
+
+    public Integer getIntClass(Boolean sign) {
+        return sign ? 1 : 0;
+    }
+
+    public Integer getIntClassWithNegative(Boolean sign) {
+        return sign ? 1 : -1;
     }
 
     @Override
