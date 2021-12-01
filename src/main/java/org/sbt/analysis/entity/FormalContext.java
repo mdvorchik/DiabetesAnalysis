@@ -1,33 +1,80 @@
 package org.sbt.analysis.entity;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class FormalContext {
-    private final List<FlatPatient> formalContext = new ArrayList<>();
+    private final int signSize = 15;
+    private final List<FlatPatient> formalContext;
 
-    public void addObject(FlatPatient flatPatient) {
-        formalContext.add(flatPatient);
+    public FormalContext(List<FlatPatient> formalContext) {
+        this.formalContext = formalContext;
     }
 
-    public List<FlatPatient> toFormalConcepts () {
-        List<FlatPatient> formalConcepts = new ArrayList<>();
-
-
+    public Map<List<Integer>, List<FlatPatient>> toFormalConcepts() {
+        Map<List<Integer>, List<FlatPatient>> formalConcepts = new HashMap<>();
+        //first sign
+        for (int i = 0; i < signSize; i++) {
+            Integer[] signArr = new Integer[signSize];
+            Arrays.fill(signArr, 0);
+            signArr[i] = 1;
+            List<Integer> signsForSearch = Arrays.stream(signArr).collect(Collectors.toList());
+            List<FlatPatient> formalConceptsFromSearch = getPatientsBySigns(signsForSearch);
+            List<Integer> signsFromSearch = getSignsByPatients(formalConceptsFromSearch);
+            if (signsFromSearch == null) {
+                continue;
+            }
+            do {
+                if (signsFromSearch.equals(signsForSearch)) {
+                    formalConcepts.put(signsFromSearch, formalConceptsFromSearch);
+                } else {
+                    signsForSearch = signsFromSearch;
+                    formalConceptsFromSearch = getPatientsBySigns(signsForSearch);
+                    signsFromSearch = getSignsByPatients(formalConceptsFromSearch);
+                }
+            } while (!signsFromSearch.equals(signsForSearch));
+        }
+        //first object
+        for (int i = 0; i < formalContext.size(); i++) {
+            List<Integer> signsForSearch = formalContext.get(i).signs;
+            List<FlatPatient> formalConceptsFromSearch = getPatientsBySigns(signsForSearch);
+            List<Integer> signsFromSearch = getSignsByPatients(formalConceptsFromSearch);
+            if (signsFromSearch == null) {
+                continue;
+            }
+            do {
+                if (signsFromSearch.equals(signsForSearch)) {
+                    formalConcepts.put(signsFromSearch, formalConceptsFromSearch);
+                } else {
+                    signsForSearch = signsFromSearch;
+                    formalConceptsFromSearch = getPatientsBySigns(signsForSearch);
+                    signsFromSearch = getSignsByPatients(formalConceptsFromSearch);
+                }
+            } while (!signsFromSearch.equals(signsForSearch));
+        }
         return formalConcepts;
     }
 
-    public List<FlatPatient> getPatientsBySigns (FlatPatient flatPatient) {
+    public List<FlatPatient> getPatientsBySigns(List<Integer> signs) {
         List<FlatPatient> flatPatients = new ArrayList<>();
         for (FlatPatient patient : formalContext) {
-            if (flatPatient.isPartOf(patient)) {
+            if (isPartOf(signs, patient.signs)) {
                 flatPatients.add(patient);
             }
         }
         return flatPatients;
     }
 
-    public FlatPatient getSignsByPatients (List<FlatPatient> flatPatients) {
+    private boolean isPartOf(List<Integer> signs, List<Integer> anotherSigns) {
+        for (int i = 0; i < anotherSigns.size(); i++) {
+            if (signs.get(i) > anotherSigns.get(i)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public List<Integer> getSignsByPatients(List<FlatPatient> flatPatients) {
         for (FlatPatient patient : flatPatients) {
             boolean isPartOF = true;
             for (FlatPatient anotherPatient : flatPatients) {
@@ -36,7 +83,7 @@ public class FormalContext {
                 }
             }
             if (isPartOF) {
-                return patient;
+                return patient.signs;
             }
         }
         return null;

@@ -1,15 +1,13 @@
 package org.sbt.analysis.executor;
 
 import org.sbt.analysis.entity.FlatPatient;
+import org.sbt.analysis.entity.FormalContext;
 import org.sbt.analysis.entity.Patient;
 import org.sbt.analysis.util.CsvController;
 
 import java.io.File;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public class Main {
     public static final Integer totalPositiveCase = 320;
@@ -75,6 +73,16 @@ public class Main {
             }
         }
 
+        startAnalysis(maxPositiveCaseInTest, maxNegativeCaseInTest, flatPatientsForTest, reducedFlatPatients);
+
+        //todo примитивный классификатор на основе расстояния Хэмминга
+
+        FormalContext formalContext = new FormalContext(reducedFlatPatients);
+        Map<List<Integer>, List<FlatPatient>> formalConcepts = formalContext.toFormalConcepts();
+        System.out.println(formalConcepts.toString());
+    }
+
+    private static void startAnalysis(int maxPositiveCaseInTest, int maxNegativeCaseInTest, List<FlatPatient> flatPatientsForTest, List<FlatPatient> reducedFlatPatients) {
         int TP = 0;
         int TN = 0;
         int FP = 0;
@@ -107,7 +115,9 @@ public class Main {
         System.out.println("FP: " + FP + "/" + maxPositiveCaseInTest + "=" + FP / (float) maxPositiveCaseInTest);
         System.out.println("FN: " + FN + "/" + maxNegativeCaseInTest + "=" + FN / (float) maxNegativeCaseInTest);
         System.out.println("undef: " + undef);
+    }
 
+    private static void countAgeInfluence(List<Patient> patientsForTraining, List<FlatPatient> reducedFlatPatients) {
         int ageInfluence = 0;
         for (FlatPatient reducedFlatPatient : reducedFlatPatients) {
             if (reducedFlatPatient.ages.size() != Math.abs(reducedFlatPatient.classification)) {
@@ -115,9 +125,7 @@ public class Main {
             }
         }
         System.out.printf("Age influence: %.2f%%%n", 100 * ageInfluence / (float) patientsForTraining.size());
-        //todo примитивный классификатор на основе расстояния Хэмминга
-
-        mostFrequentSignsInPositive(reducedFlatPatients);
+        //Age influence: 0,26%
     }
 
     private static void mostFrequentSignsInPositive(List<FlatPatient> reducedFlatPatients) {
