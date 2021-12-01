@@ -1,5 +1,7 @@
 package org.sbt.analysis.executor;
 
+import org.sbt.analysis.classifier.Classifier;
+import org.sbt.analysis.classifier.NaiveClassifier;
 import org.sbt.analysis.entity.FlatPatient;
 import org.sbt.analysis.entity.FormalConcepts;
 import org.sbt.analysis.entity.FormalContext;
@@ -32,9 +34,9 @@ public class Main {
         List<Patient> patientsForTest = new ArrayList<>();
         int counterPositiveCase = 0;
         int counterNegativeCase = 0;
-        int maxPositiveCaseInTraining = (int) (totalPositiveCase * 0.75);
+        int maxPositiveCaseInTraining = (int) (totalPositiveCase * 0.35);
         int maxPositiveCaseInTest = totalPositiveCase - maxPositiveCaseInTraining;
-        int maxNegativeCaseInTraining = (int) (totalNegativeCase * 0.75);
+        int maxNegativeCaseInTraining = (int) (totalNegativeCase * 0.5);
         int maxNegativeCaseInTest = totalNegativeCase - maxNegativeCaseInTraining;
         for (Patient patient : patients) {
             if (patient.classification) {
@@ -76,9 +78,12 @@ public class Main {
 
         FormalContext formalContext = new FormalContext(reducedFlatPatients);
         FormalConcepts formalConcepts = formalContext.toFormalConcepts();
+        Classifier classifier = new NaiveClassifier();
+        startAnalysis(classifier, maxPositiveCaseInTest, maxNegativeCaseInTest, flatPatientsForTest, formalConcepts);
+        countAgeInfluence(patientsForTraining, reducedFlatPatients);
     }
 
-    private static void startAnalysis(int maxPositiveCaseInTest, int maxNegativeCaseInTest, List<FlatPatient> flatPatientsForTest, List<FlatPatient> reducedFlatPatients) {
+    private static void startAnalysis(Classifier classifier, int maxPositiveCaseInTest, int maxNegativeCaseInTest, List<FlatPatient> flatPatientsForTest, FormalConcepts formalConcepts) {
         int TP = 0;
         int TN = 0;
         int FP = 0;
@@ -86,9 +91,8 @@ public class Main {
         int undef = 0;
 
         for (FlatPatient flatPatient : flatPatientsForTest) {
-            if (reducedFlatPatients.contains(flatPatient)) {
-                FlatPatient reducedFlatPatient = reducedFlatPatients.get(reducedFlatPatients.indexOf(flatPatient));
-                if (reducedFlatPatient.classification >= 0) {
+                boolean isPositive = classifier.classify(flatPatient, formalConcepts);
+                if (isPositive) {
                     if (flatPatient.classification >= 0) {
                         TP++;
                     } else {
@@ -101,16 +105,12 @@ public class Main {
                         FN++;
                     }
                 }
-            } else {
-                undef++;
-            }
         }
 
         System.out.println("TP: " + TP + "/" + maxPositiveCaseInTest + "=" + TP / (float) maxPositiveCaseInTest);
         System.out.println("TN: " + TN + "/" + maxNegativeCaseInTest + "=" + TN / (float) maxNegativeCaseInTest);
-        System.out.println("FP: " + FP + "/" + maxPositiveCaseInTest + "=" + FP / (float) maxPositiveCaseInTest);
-        System.out.println("FN: " + FN + "/" + maxNegativeCaseInTest + "=" + FN / (float) maxNegativeCaseInTest);
-        System.out.println("undef: " + undef);
+        System.out.println("FP: " + FP + "/" + maxNegativeCaseInTest + "=" + FP / (float) maxNegativeCaseInTest);
+        System.out.println("FN: " + FN + "/" + maxPositiveCaseInTest + "=" + FN / (float) maxPositiveCaseInTest);
     }
 
     private static void countAgeInfluence(List<Patient> patientsForTraining, List<FlatPatient> reducedFlatPatients) {
