@@ -107,5 +107,36 @@ public class Main {
         System.out.println("FP: " + FP + "/" + maxPositiveCaseInTest + "=" + FP / (float) maxPositiveCaseInTest);
         System.out.println("FN: " + FN + "/" + maxNegativeCaseInTest + "=" + FN / (float) maxNegativeCaseInTest);
         System.out.println("undef: " + undef);
+
+        int ageInfluence = 0;
+        for (FlatPatient reducedFlatPatient : reducedFlatPatients) {
+            if (reducedFlatPatient.ages.size() != Math.abs(reducedFlatPatient.classification)) {
+                ageInfluence++;
+            }
+        }
+        System.out.printf("Age influence: %.2f%%%n", 100 * ageInfluence / (float) patientsForTraining.size());
+        //todo примитивный классификатор на основе расстояния Хэмминга
+
+        mostFrequentSignsInPositive(reducedFlatPatients);
+    }
+
+    private static void mostFrequentSignsInPositive(List<FlatPatient> reducedFlatPatients) {
+        int[] signsPos = new int[15];
+        for (FlatPatient reducedFlatPatient : reducedFlatPatients) {
+            if (reducedFlatPatient.classification >= 0) {
+                for (int i = 0; i < signsPos.length; i++) {
+                    signsPos[i] += reducedFlatPatient.signs.get(i);
+
+                }
+            }
+        }
+        /*
+        polyuria
+        polydipsia
+        weakness
+         */
+        for (int signPos : signsPos) {
+            System.out.println(signPos);
+        }
     }
 }

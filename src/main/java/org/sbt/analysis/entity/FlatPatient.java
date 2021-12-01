@@ -16,6 +16,15 @@ public class FlatPatient {
         this.classification = classification;
     }
 
+    public boolean isPartOf(FlatPatient anotherFlatPatient) {
+        for (int i = 0; i < anotherFlatPatient.signs.size(); i++) {
+            if (signs.get(i) > anotherFlatPatient.signs.get(i)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
