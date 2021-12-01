@@ -74,10 +74,6 @@ public class Main {
             }
         }
 
-        startAnalysis(maxPositiveCaseInTest, maxNegativeCaseInTest, flatPatientsForTest, reducedFlatPatients);
-
-        //todo примитивный классификатор на основе расстояния Хэмминга
-
         FormalContext formalContext = new FormalContext(reducedFlatPatients);
         FormalConcepts formalConcepts = formalContext.toFormalConcepts();
     }
