@@ -11,7 +11,7 @@ public class FormalContext {
         this.formalContext = formalContext;
     }
 
-    public Map<List<Integer>, List<FlatPatient>> toFormalConcepts() {
+    public FormalConcepts toFormalConcepts() {
         Map<List<Integer>, List<FlatPatient>> formalConcepts = new HashMap<>();
         //first sign
         for (int i = 0; i < signSize; i++) {
@@ -52,7 +52,7 @@ public class FormalContext {
                 }
             } while (!signsFromSearch.equals(signsForSearch));
         }
-        return formalConcepts;
+        return new FormalConcepts(formalConcepts);
     }
 
     public List<FlatPatient> getPatientsBySigns(List<Integer> signs) {

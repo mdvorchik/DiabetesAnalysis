@@ -1,6 +1,7 @@
 package org.sbt.analysis.executor;
 
 import org.sbt.analysis.entity.FlatPatient;
+import org.sbt.analysis.entity.FormalConcepts;
 import org.sbt.analysis.entity.FormalContext;
 import org.sbt.analysis.entity.Patient;
 import org.sbt.analysis.util.CsvController;
@@ -78,8 +79,7 @@ public class Main {
         //todo примитивный классификатор на основе расстояния Хэмминга
 
         FormalContext formalContext = new FormalContext(reducedFlatPatients);
-        Map<List<Integer>, List<FlatPatient>> formalConcepts = formalContext.toFormalConcepts();
-        System.out.println(formalConcepts.toString());
+        FormalConcepts formalConcepts = formalContext.toFormalConcepts();
     }
 
     private static void startAnalysis(int maxPositiveCaseInTest, int maxNegativeCaseInTest, List<FlatPatient> flatPatientsForTest, List<FlatPatient> reducedFlatPatients) {
