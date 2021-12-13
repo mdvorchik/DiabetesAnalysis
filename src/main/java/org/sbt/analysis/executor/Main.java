@@ -2,6 +2,7 @@ package org.sbt.analysis.executor;
 
 import org.sbt.analysis.classifier.Classifier;
 import org.sbt.analysis.classifier.NaiveClassifier;
+import org.sbt.analysis.classifier.WithAgeClassifier;
 import org.sbt.analysis.entity.FlatPatient;
 import org.sbt.analysis.entity.FormalConcepts;
 import org.sbt.analysis.entity.FormalContext;
@@ -16,8 +17,30 @@ public class Main {
     public static final Integer totalPositiveCase = 320;
     public static final Integer totalNegativeCase = 200;
 
+    public static final Integer TPtot = 80;
+    public static final Integer TNtot = 50;
+    public static final Integer FPtot = 50;
+    public static final Integer FNtot = 80;
+
+    public static final List<Float> TParr = new ArrayList<>();
+    public static final List<Float> TNarr = new ArrayList<>();
+    public static final List<Float> FParr = new ArrayList<>();
+    public static final List<Float> FNarr = new ArrayList<>();
+
     public static void main(String[] args) {
         System.out.println("Ready to analysis");
+        Classifier classifier = new WithAgeClassifier();
+        for (int i = 0; i < 50; i++) {
+            analysis(classifier);
+        }
+        System.out.println("TP total: " + TPtot + " accuracy=" + TParr.stream().reduce(Float::sum).get() / (float) TParr.size());
+        System.out.println("TN total: " + TNtot + " accuracy=" + TNarr.stream().reduce(Float::sum).get() / (float) TNarr.size());
+        System.out.println("FP total: " + FPtot + " accuracy=" + FParr.stream().reduce(Float::sum).get() / (float) FParr.size());
+        System.out.println("FN total: " + FNtot + " accuracy=" + FNarr.stream().reduce(Float::sum).get() / (float) FNarr.size());
+    }
+
+    private static void analysis(Classifier classifier) {
+
         CsvController csvController = new CsvController();
         File dataFile = null;
         try {
@@ -34,9 +57,9 @@ public class Main {
         List<Patient> patientsForTest = new ArrayList<>();
         int counterPositiveCase = 0;
         int counterNegativeCase = 0;
-        int maxPositiveCaseInTraining = (int) (totalPositiveCase * 0.35);
+        int maxPositiveCaseInTraining = (int) (totalPositiveCase * 0.75);
         int maxPositiveCaseInTest = totalPositiveCase - maxPositiveCaseInTraining;
-        int maxNegativeCaseInTraining = (int) (totalNegativeCase * 0.5);
+        int maxNegativeCaseInTraining = (int) (totalNegativeCase * 0.75);
         int maxNegativeCaseInTest = totalNegativeCase - maxNegativeCaseInTraining;
         for (Patient patient : patients) {
             if (patient.classification) {
@@ -78,7 +101,6 @@ public class Main {
 
         FormalContext formalContext = new FormalContext(reducedFlatPatients);
         FormalConcepts formalConcepts = formalContext.toFormalConcepts();
-        Classifier classifier = new NaiveClassifier();
         startAnalysis(classifier, maxPositiveCaseInTest, maxNegativeCaseInTest, flatPatientsForTest, formalConcepts);
         countAgeInfluence(patientsForTraining, reducedFlatPatients);
     }
@@ -106,11 +128,10 @@ public class Main {
                     }
                 }
         }
-
-        System.out.println("TP: " + TP + "/" + maxPositiveCaseInTest + "=" + TP / (float) maxPositiveCaseInTest);
-        System.out.println("TN: " + TN + "/" + maxNegativeCaseInTest + "=" + TN / (float) maxNegativeCaseInTest);
-        System.out.println("FP: " + FP + "/" + maxNegativeCaseInTest + "=" + FP / (float) maxNegativeCaseInTest);
-        System.out.println("FN: " + FN + "/" + maxPositiveCaseInTest + "=" + FN / (float) maxPositiveCaseInTest);
+        TParr.add(TP / (float) maxPositiveCaseInTest);
+        TNarr.add(TN / (float) maxNegativeCaseInTest);
+        FParr.add(FP / (float) maxNegativeCaseInTest);
+        FNarr.add(FN / (float) maxPositiveCaseInTest);
     }
 
     private static void countAgeInfluence(List<Patient> patientsForTraining, List<FlatPatient> reducedFlatPatients) {
@@ -120,7 +141,7 @@ public class Main {
                 ageInfluence++;
             }
         }
-        System.out.printf("Age influence: %.2f%%%n", 100 * ageInfluence / (float) patientsForTraining.size());
+        //System.out.printf("Age influence: %.2f%%%n", 100 * ageInfluence / (float) patientsForTraining.size());
         //Age influence: 0,26%
     }
 
