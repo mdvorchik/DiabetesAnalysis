@@ -1,8 +1,6 @@
 package org.sbt.analysis.executor;
 
-import org.sbt.analysis.classifier.Classifier;
-import org.sbt.analysis.classifier.NaiveClassifier;
-import org.sbt.analysis.classifier.WithAgeClassifier;
+import org.sbt.analysis.classifier.*;
 import org.sbt.analysis.entity.FlatPatient;
 import org.sbt.analysis.entity.FormalConcepts;
 import org.sbt.analysis.entity.FormalContext;
@@ -22,21 +20,69 @@ public class Main {
     public static final Integer FPtot = 50;
     public static final Integer FNtot = 80;
 
-    public static final List<Float> TParr = new ArrayList<>();
-    public static final List<Float> TNarr = new ArrayList<>();
-    public static final List<Float> FParr = new ArrayList<>();
-    public static final List<Float> FNarr = new ArrayList<>();
+    public static List<Float> TParr = new ArrayList<>();
+    public static List<Float> TNarr = new ArrayList<>();
+    public static List<Float> FParr = new ArrayList<>();
+    public static List<Float> FNarr = new ArrayList<>();
 
     public static void main(String[] args) {
-        System.out.println("Ready to analysis");
-        Classifier classifier = new WithAgeClassifier();
+        System.out.println("Ready to analysis by NaiveClassifier 1:");
+        Classifier classifier = new NaiveClassifier();
         for (int i = 0; i < 50; i++) {
             analysis(classifier);
         }
-        System.out.println("TP total: " + TPtot + " accuracy=" + TParr.stream().reduce(Float::sum).get() / (float) TParr.size());
-        System.out.println("TN total: " + TNtot + " accuracy=" + TNarr.stream().reduce(Float::sum).get() / (float) TNarr.size());
-        System.out.println("FP total: " + FPtot + " accuracy=" + FParr.stream().reduce(Float::sum).get() / (float) FParr.size());
-        System.out.println("FN total: " + FNtot + " accuracy=" + FNarr.stream().reduce(Float::sum).get() / (float) FNarr.size());
+        outData();
+        clearResource();
+
+        System.out.println("Ready to analysis by SquareClassifier 2:");
+        classifier = new SquareClassifier();
+        for (int i = 0; i < 50; i++) {
+            analysis(classifier);
+        }
+        outData();
+        clearResource();
+
+        System.out.println("Ready to analysis by WithAgeClassifier 3:");
+        classifier = new WithAgeClassifier();
+        for (int i = 0; i < 50; i++) {
+            analysis(classifier);
+        }
+        outData();
+        clearResource();
+
+        System.out.println("Ready to analysis by WithAgeSquareClassifier 4:");
+        classifier = new WithAgeSquareClassifier();
+        for (int i = 0; i < 50; i++) {
+            analysis(classifier);
+        }
+        outData();
+        clearResource();
+    }
+
+    private static void clearResource() {
+        TParr = new ArrayList<>();
+        TNarr = new ArrayList<>();
+        FParr = new ArrayList<>();
+        FNarr = new ArrayList<>();
+    }
+
+    private static void outData() {
+        float TPrate = TParr.stream().reduce(Float::sum).get() / (float) TParr.size();
+        float TNrate = TNarr.stream().reduce(Float::sum).get() / (float) TNarr.size();
+        float FPrate = FParr.stream().reduce(Float::sum).get() / (float) FParr.size();
+        float FNrate = FNarr.stream().reduce(Float::sum).get() / (float) FNarr.size();
+        float falseDiscoveryRate = (FPrate * FPtot) / (FPrate * FPtot + TPrate * TPtot);
+        float accuracy = (TPrate * TPtot + TNrate * TNtot) / (TPtot + TNtot);
+        float precision = (TPrate * TPtot) / (FPrate * FPtot + TPrate * TPtot);
+        float recall = (TPrate * TPtot) / (FNrate * FNtot + TPrate * TPtot);
+        System.out.println("TP rate=" + TPrate);
+        System.out.println("TN rate=" + TNrate);
+        System.out.println("FP rate=" + FPrate);
+        System.out.println("FN rate=" + FNrate);
+        System.out.println("False Discovery Rate=" + falseDiscoveryRate);
+        System.out.println("Accuracy=" + accuracy);
+        System.out.println("Precision=" + precision);
+        System.out.println("Recall=" + recall);
     }
 
     private static void analysis(Classifier classifier) {

@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class WithAgeClassifier implements Classifier {
+public class WithAgeSquareClassifier implements Classifier {
     @Override
     public boolean classify(FlatPatient patient, FormalConcepts formalConcepts) {
         float naiveClassifier = 0f;
@@ -41,7 +41,7 @@ public class WithAgeClassifier implements Classifier {
         for (Map.Entry<Integer, Integer> entry : distanceToClassification.entrySet()) {
             Integer dist = entry.getKey();
             Integer clazz = entry.getValue();
-            naiveClassifier += clazz / (float) (dist + 1);
+            naiveClassifier += clazz / (float) (dist * dist + 1);
         }
 
         return naiveClassifier > 0;
