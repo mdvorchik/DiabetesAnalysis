@@ -1,7 +1,6 @@
 package org.sbt.analysis.executor;
 
-import org.sbt.analysis.classifier.Classifier;
-import org.sbt.analysis.classifier.NaiveClassifier;
+import org.sbt.analysis.classifier.*;
 import org.sbt.analysis.entity.FlatPatient;
 import org.sbt.analysis.entity.FormalConcepts;
 import org.sbt.analysis.entity.FormalContext;
@@ -16,8 +15,78 @@ public class Main {
     public static final Integer totalPositiveCase = 320;
     public static final Integer totalNegativeCase = 200;
 
+    public static final Integer TPtot = 80;
+    public static final Integer TNtot = 50;
+    public static final Integer FPtot = 50;
+    public static final Integer FNtot = 80;
+
+    public static List<Float> TParr = new ArrayList<>();
+    public static List<Float> TNarr = new ArrayList<>();
+    public static List<Float> FParr = new ArrayList<>();
+    public static List<Float> FNarr = new ArrayList<>();
+
     public static void main(String[] args) {
-        System.out.println("Ready to analysis");
+        System.out.println("Ready to analysis by NaiveClassifier 1:");
+        Classifier classifier = new NaiveClassifier();
+        for (int i = 0; i < 50; i++) {
+            analysis(classifier);
+        }
+        outData();
+        clearResource();
+
+        System.out.println("Ready to analysis by SquareClassifier 2:");
+        classifier = new SquareClassifier();
+        for (int i = 0; i < 50; i++) {
+            analysis(classifier);
+        }
+        outData();
+        clearResource();
+
+        System.out.println("Ready to analysis by WithAgeClassifier 3:");
+        classifier = new WithAgeClassifier();
+        for (int i = 0; i < 50; i++) {
+            analysis(classifier);
+        }
+        outData();
+        clearResource();
+
+        System.out.println("Ready to analysis by WithAgeSquareClassifier 4:");
+        classifier = new WithAgeSquareClassifier();
+        for (int i = 0; i < 50; i++) {
+            analysis(classifier);
+        }
+        outData();
+        clearResource();
+    }
+
+    private static void clearResource() {
+        TParr = new ArrayList<>();
+        TNarr = new ArrayList<>();
+        FParr = new ArrayList<>();
+        FNarr = new ArrayList<>();
+    }
+
+    private static void outData() {
+        float TPrate = TParr.stream().reduce(Float::sum).get() / (float) TParr.size();
+        float TNrate = TNarr.stream().reduce(Float::sum).get() / (float) TNarr.size();
+        float FPrate = FParr.stream().reduce(Float::sum).get() / (float) FParr.size();
+        float FNrate = FNarr.stream().reduce(Float::sum).get() / (float) FNarr.size();
+        float falseDiscoveryRate = (FPrate * FPtot) / (FPrate * FPtot + TPrate * TPtot);
+        float accuracy = (TPrate * TPtot + TNrate * TNtot) / (TPtot + TNtot);
+        float precision = (TPrate * TPtot) / (FPrate * FPtot + TPrate * TPtot);
+        float recall = (TPrate * TPtot) / (FNrate * FNtot + TPrate * TPtot);
+        System.out.println("TP rate=" + TPrate);
+        System.out.println("TN rate=" + TNrate);
+        System.out.println("FP rate=" + FPrate);
+        System.out.println("FN rate=" + FNrate);
+        System.out.println("False Discovery Rate=" + falseDiscoveryRate);
+        System.out.println("Accuracy=" + accuracy);
+        System.out.println("Precision=" + precision);
+        System.out.println("Recall=" + recall);
+    }
+
+    private static void analysis(Classifier classifier) {
+
         CsvController csvController = new CsvController();
         File dataFile = null;
         try {
@@ -34,9 +103,9 @@ public class Main {
         List<Patient> patientsForTest = new ArrayList<>();
         int counterPositiveCase = 0;
         int counterNegativeCase = 0;
-        int maxPositiveCaseInTraining = (int) (totalPositiveCase * 0.35);
+        int maxPositiveCaseInTraining = (int) (totalPositiveCase * 0.75);
         int maxPositiveCaseInTest = totalPositiveCase - maxPositiveCaseInTraining;
-        int maxNegativeCaseInTraining = (int) (totalNegativeCase * 0.5);
+        int maxNegativeCaseInTraining = (int) (totalNegativeCase * 0.75);
         int maxNegativeCaseInTest = totalNegativeCase - maxNegativeCaseInTraining;
         for (Patient patient : patients) {
             if (patient.classification) {
@@ -78,7 +147,6 @@ public class Main {
 
         FormalContext formalContext = new FormalContext(reducedFlatPatients);
         FormalConcepts formalConcepts = formalContext.toFormalConcepts();
-        Classifier classifier = new NaiveClassifier();
         startAnalysis(classifier, maxPositiveCaseInTest, maxNegativeCaseInTest, flatPatientsForTest, formalConcepts);
         countAgeInfluence(patientsForTraining, reducedFlatPatients);
     }
@@ -106,11 +174,10 @@ public class Main {
                     }
                 }
         }
-
-        System.out.println("TP: " + TP + "/" + maxPositiveCaseInTest + "=" + TP / (float) maxPositiveCaseInTest);
-        System.out.println("TN: " + TN + "/" + maxNegativeCaseInTest + "=" + TN / (float) maxNegativeCaseInTest);
-        System.out.println("FP: " + FP + "/" + maxNegativeCaseInTest + "=" + FP / (float) maxNegativeCaseInTest);
-        System.out.println("FN: " + FN + "/" + maxPositiveCaseInTest + "=" + FN / (float) maxPositiveCaseInTest);
+        TParr.add(TP / (float) maxPositiveCaseInTest);
+        TNarr.add(TN / (float) maxNegativeCaseInTest);
+        FParr.add(FP / (float) maxNegativeCaseInTest);
+        FNarr.add(FN / (float) maxPositiveCaseInTest);
     }
 
     private static void countAgeInfluence(List<Patient> patientsForTraining, List<FlatPatient> reducedFlatPatients) {
@@ -120,7 +187,7 @@ public class Main {
                 ageInfluence++;
             }
         }
-        System.out.printf("Age influence: %.2f%%%n", 100 * ageInfluence / (float) patientsForTraining.size());
+        //System.out.printf("Age influence: %.2f%%%n", 100 * ageInfluence / (float) patientsForTraining.size());
         //Age influence: 0,26%
     }
 
